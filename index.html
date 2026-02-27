@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GalangHost | High-End Encrypter</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        :root {
+            --primary: #00d2ff;
+            --secondary: #3a7bd5;
+            --accent: #ff00c1;
+            --bg: #0b0f1a;
+            --card: rgba(30, 41, 59, 0.95);
+            --text: #f8fafc;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: var(--bg); color: var(--text); overflow-x: hidden; min-height: 100vh; width: 100%; }
+
+        /* --- FIX OPENING CENTERED --- */
+        #opening-page {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+            background: #000; display: flex; justify-content: center; align-items: center;
+            z-index: 10000; transition: 0.8s ease-in-out;
+        }
+
+        canvas#rainCanvas {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1; pointer-events: none; opacity: 0.6;
+        }
+
+        .glass-card { 
+            position: relative; z-index: 2; 
+            display: flex; flex-direction: column; 
+            justify-content: center; align-items: center;
+            text-align: center; padding: 40px 20px; 
+            background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 30px;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5); width: 90%; max-width: 480px;
+            margin: auto;
+        }
+
+        .glitch-text {
+            font-size: clamp(1.8rem, 10vw, 2.8rem); 
+            font-weight: 900; color: #fff;
+            letter-spacing: 2px; text-shadow: 0 0 20px var(--primary);
+            margin-bottom: 15px; width: 100%;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        #motivation-text {
+            color: #d1d5db; font-style: italic; font-size: 0.9rem;
+            margin-bottom: 30px; line-height: 1.5; max-width: 100%;
+            padding: 0 10px;
+        }
+
+        .btn-group { 
+            display: flex; flex-direction: column; gap: 15px; 
+            width: 100%; align-items: center; 
+        }
+
+        .enter-btn { 
+            background: linear-gradient(45deg, var(--primary), var(--secondary)); 
+            border: none; color: white; padding: 15px; width: 85%;
+            border-radius: 50px; cursor: pointer; font-weight: bold; 
+            letter-spacing: 2px; transition: 0.3s; font-size: 1rem;
+        }
+
+        .store-btn {
+            background: transparent; border: 1px solid var(--accent);
+            color: var(--accent); padding: 10px; width: 65%; border-radius: 50px;
+            font-weight: bold; cursor: pointer; transition: 0.3s;
+            text-decoration: none; font-size: 0.85rem;
+        }
+
+        /* --- DASHBOARD STYLES --- */
+        #central-menu { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: var(--bg); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9000; }
+        .big-btn { width: 85%; max-width: 320px; padding: 20px; margin: 10px; border: 1px solid var(--primary); background: transparent; color: white; border-radius: 15px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        nav { display: none; justify-content: space-between; align-items: center; padding: 15px 5%; background: #1e293b; position: sticky; top: 0; z-index: 8000; border-bottom: 2px solid var(--primary); }
+        .container { max-width: 650px; margin: 25px auto; padding: 15px; display: none; }
+        .enc-card { background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid #334155; }
+        textarea { width: 100%; margin-top: 15px; background: #0b0f1a; color: white; border: 1px solid #334155; border-radius: 12px; padding: 15px; outline: none; }
+        .btn-action { width: 100%; padding: 18px; background: var(--primary); border: none; border-radius: 15px; color: white; font-weight: bold; margin-top: 20px; cursor: pointer; }
+        
+        #dropNav { position: absolute; right: 5%; top: 65px; background: #1e293b; border: 1px solid var(--primary); display: none; flex-direction: column; z-index: 9999; border-radius: 10px; overflow: hidden; }
+        #dropNav button { background: none; border: none; color: white; padding: 12px 25px; text-align: left; cursor: pointer; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <div id="opening-page">
+        <canvas id="rainCanvas"></canvas>
+        <div class="glass-card">
+            <h1 class="glitch-text">GALANGHOST</h1>
+            <p id="motivation-text">"Loading inspiration..."</p>
+            
+            <div class="btn-group">
+                <button class="enter-btn" onclick="showCentral()">ENTER CONSOLE</button>
+                <a href="https://www.langzxy-store.my.id" target="_blank" class="store-btn">Visit Web Store 🛒</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="central-menu">
+        <h3 style="margin-bottom: 25px; letter-spacing: 2px;">CHOOSE TOOLS</h3>
+        <button class="big-btn" onclick="openApp('html-enc')">🌐 HTML ENCRYPTER</button>
+        <button class="big-btn" onclick="openApp('js-enc')">📜 JS ENCRYPTER</button>
+        <button class="big-btn" onclick="openApp('css-enc')">🎨 CSS OBFUSCATOR</button>
+    </div>
+
+    <nav id="top-nav">
+        <h2>Galang<span style="color: var(--primary);">Tamvanzz</span></h2>
+        <button onclick="toggleD()" style="background:var(--primary); border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-weight:bold;">MENU ☰</button>
+        <div id="dropNav">
+            <button onclick="switchApp('html-enc')">HTML Enc</button>
+            <button onclick="switchApp('js-enc')">JS Enc</button>
+            <button onclick="switchApp('css-enc')">CSS Obfuscator</button>
+        </div>
+    </nav>
+
+    <div class="container" id="main-app">
+        <div id="html-enc" class="enc-card" style="display:none;">
+            <h3>🌐 HTML HARD ENC</h3>
+            <input type="file" id="fHtml" accept=".html,.txt" style="display:block; margin: 15px 0;">
+            <textarea id="tHtml" rows="8" placeholder="Paste kode HTML..."></textarea>
+            <select id="selHtml" style="width:100%; padding:12px; background:#0b0f1a; color:white; border-radius:10px; margin-top:15px; border:1px solid #334155;">
+                <option value="hex">Hexadecimal Style</option>
+                <option value="unicode">Unicode Style</option>
+            </select>
+            <button class="btn-action" onclick="doEnc('html')">ENCRYPT NOW</button>
+        </div>
+
+        <div id="js-enc" class="enc-card" style="display:none;">
+            <h3>📜 JS ENCRYPTER</h3>
+            <input type="file" id="fJs" accept=".js" style="display:block; margin: 15px 0;">
+            <textarea id="tJs" rows="8" placeholder="Paste kode JS..."></textarea>
+            <button class="btn-action" onclick="doEnc('js')">ENCRYPT NOW</button>
+        </div>
+
+        <div id="css-enc" class="enc-card" style="display:none;">
+            <h3>🎨 CSS OBFUSCATOR</h3>
+            <input type="file" id="fCss" accept=".css" style="display:block; margin: 15px 0;">
+            <textarea id="tCss" rows="8" placeholder="Paste kode CSS..."></textarea>
+            <button class="btn-action" onclick="doEnc('css')">ENCRYPT NOW</button>
+        </div>
+    </div>
+
+    <script>
+        // --- RAIN EFFECT ---
+        const canvas = document.getElementById('rainCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        let drops = [];
+        for (let i = 0; i < 100; i++) { drops.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, len: Math.random() * 20 + 10, speed: Math.random() * 10 + 5 }); }
+        function drawRain() { ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.strokeStyle = '#00d2ff'; ctx.lineWidth = 1; for (let i = 0; i < drops.length; i++) { let p = drops[i]; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x, p.y + p.len); ctx.stroke(); p.y += p.speed; if (p.y > canvas.height) { p.y = -20; p.x = Math.random() * canvas.width; } } requestAnimationFrame(drawRain); }
+        drawRain();
+
+        // --- MOTIVATION ---
+        const quotes = [
+            "GalangHost: Protect your code, grow your dreams.",
+            "Coding adalah seni mengubah logika menjadi keajaiban.",
+            "Hargai proses, hasil takkan lari kemana.",
+            "Setiap error adalah pelajaran menuju kesempurnaan."
+        ];
+        document.getElementById('motivation-text').innerText = quotes[Math.floor(Math.random() * quotes.length)];
+
+        // --- NAVIGATION LOGIC ---
+        function showCentral() { document.getElementById('opening-page').style.opacity = '0'; setTimeout(() => { document.getElementById('opening-page').style.display = 'none'; document.getElementById('central-menu').style.display = 'flex'; }, 600); }
+        function openApp(id) { document.getElementById('central-menu').style.display = 'none'; document.getElementById('top-nav').style.display = 'flex'; document.getElementById('main-app').style.display = 'block'; switchApp(id); }
+        function switchApp(id) { document.getElementById('html-enc').style.display = 'none'; document.getElementById('js-enc').style.display = 'none'; document.getElementById('css-enc').style.display = 'none'; document.getElementById(id).style.display = 'block'; document.getElementById('dropNav').style.display = 'none'; }
+        function toggleD() { let d = document.getElementById('dropNav'); d.style.display = (d.style.display === 'flex') ? 'none' : 'flex'; }
+
+        // --- SECURE BACKEND BRIDGE ---
+        async function doEnc(type) {
+            let code = "";
+            let fileIn = document.getElementById(type === 'html' ? 'fHtml' : (type === 'js' ? 'fJs' : 'fCss'));
+            let textIn = document.getElementById(type === 'html' ? 'tHtml' : (type === 'js' ? 'tJs' : 'tCss'));
+
+            if (fileIn.files.length > 0) { 
+                code = await fileIn.files[0].text(); 
+            } else { 
+                code = textIn.value; 
+            }
+
+            if (!code) return alert("Pilih file atau masukkan teks dulu!");
+
+            try {
+                let styleVal = document.getElementById('selHtml') ? document.getElementById('selHtml').value : 'hex';
+
+                // Nembak ke api/encrypt.js di folder api/
+                const response = await fetch('/api/encrypt', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code, type, style: styleVal })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    const blob = new Blob([data.result], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `GalangEnc_${Date.now()}.${type === 'html' ? 'html' : type}`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    alert("Enkripsi Berhasil via Server Aman!");
+                } else {
+                    alert("Gagal Enkripsi: " + (data.message || "Kesalahan server"));
+                }
+            } catch (err) {
+                alert("Gagal konek ke server backend! Pastikan folder api/ sudah berisi encrypt.js.");
+            }
+        }
+    </script>
+</body>
+</html>
