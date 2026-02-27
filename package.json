@@ -1,0 +1,11 @@
+{
+  "name": "galanghost-secure-enc",
+  "version": "1.0.0",
+  "main": "api/encrypt.js",
+  "scripts": {
+    "start": "node api/encrypt.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
