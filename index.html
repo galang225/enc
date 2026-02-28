@@ -4,217 +4,180 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GalangHost | High-End Encrypter</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@300;500&display=swap');
+
         :root {
-            --primary: #00d2ff;
-            --secondary: #3a7bd5;
+            --primary: #00f2ff;
+            --secondary: #7000ff;
             --accent: #ff00c1;
-            --bg: #0b0f1a;
-            --card: rgba(30, 41, 59, 0.95);
-            --text: #f8fafc;
+            --bg: #05070a;
+            --card: rgba(13, 17, 23, 0.8);
+            --text: #e2e8f0;
+            --glow: 0 0 15px rgba(0, 242, 255, 0.5);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        body { background-color: var(--bg); color: var(--text); overflow-x: hidden; min-height: 100vh; width: 100%; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'JetBrains Mono', monospace; }
+        body { background-color: var(--bg); color: var(--text); overflow-x: hidden; min-height: 100vh; }
 
-        /* --- FIX OPENING CENTERED --- */
+        button, a { transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1); cursor: pointer; outline: none; }
+        button:active { transform: scale(0.95); }
+
+        /* --- FIX NAMA DISINI BOSS --- */
+        .glitch-text {
+            font-family: 'Orbitron', sans-serif;
+            /* Font otomatis resize biar gak kepotong di HP */
+            font-size: clamp(1.6rem, 8.5vw, 3rem); 
+            font-weight: 700;
+            color: #fff;
+            text-shadow: var(--glow);
+            letter-spacing: clamp(2px, 1.2vw, 5px);
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            white-space: nowrap; /* Biar tetep sebaris */
+            width: 100%;
+            display: block;
+        }
+
         #opening-page {
             position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
             background: #000; display: flex; justify-content: center; align-items: center;
             z-index: 10000; transition: 0.8s ease-in-out;
         }
+        canvas#rainCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; opacity: 0.4; }
 
-        canvas#rainCanvas {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 1; pointer-events: none; opacity: 0.6;
+        .glass-card {
+            position: relative; z-index: 2; padding: 50px 20px;
+            background: var(--card); backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 242, 255, 0.2); border-radius: 40px;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8); text-align: center;
+            width: 90%; max-width: 480px; /* Lebar card aman buat mobile */
         }
 
-        .glass-card { 
-            position: relative; z-index: 2; 
-            display: flex; flex-direction: column; 
-            justify-content: center; align-items: center;
-            text-align: center; padding: 40px 20px; 
-            background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 30px;
-            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5); width: 90%; max-width: 480px;
-            margin: auto;
+        .enter-btn {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border: none; color: white; padding: 18px 40px; border-radius: 100px;
+            font-family: 'Orbitron', sans-serif; font-weight: bold; letter-spacing: 3px;
+            box-shadow: var(--glow); margin-bottom: 20px; width: 85%;
         }
 
-        .glitch-text {
-            font-size: clamp(1.8rem, 10vw, 2.8rem); 
-            font-weight: 900; color: #fff;
-            letter-spacing: 2px; text-shadow: 0 0 20px var(--primary);
-            margin-bottom: 15px; width: 100%;
-            text-transform: uppercase;
-            white-space: nowrap;
-        }
-
-        #motivation-text {
-            color: #d1d5db; font-style: italic; font-size: 0.9rem;
-            margin-bottom: 30px; line-height: 1.5; max-width: 100%;
-            padding: 0 10px;
-        }
-
-        .btn-group { 
-            display: flex; flex-direction: column; gap: 15px; 
-            width: 100%; align-items: center; 
-        }
-
-        .enter-btn { 
-            background: linear-gradient(45deg, var(--primary), var(--secondary)); 
-            border: none; color: white; padding: 15px; width: 85%;
-            border-radius: 50px; cursor: pointer; font-weight: bold; 
-            letter-spacing: 2px; transition: 0.3s; font-size: 1rem;
-        }
-
-        .store-btn {
-            background: transparent; border: 1px solid var(--accent);
-            color: var(--accent); padding: 10px; width: 65%; border-radius: 50px;
-            font-weight: bold; cursor: pointer; transition: 0.3s;
-            text-decoration: none; font-size: 0.85rem;
-        }
-
-        /* --- DASHBOARD STYLES --- */
-        #central-menu { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: var(--bg); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9000; }
-        .big-btn { width: 85%; max-width: 320px; padding: 20px; margin: 10px; border: 1px solid var(--primary); background: transparent; color: white; border-radius: 15px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        nav { display: none; justify-content: space-between; align-items: center; padding: 15px 5%; background: #1e293b; position: sticky; top: 0; z-index: 8000; border-bottom: 2px solid var(--primary); }
-        .container { max-width: 650px; margin: 25px auto; padding: 15px; display: none; }
-        .enc-card { background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid #334155; }
-        textarea { width: 100%; margin-top: 15px; background: #0b0f1a; color: white; border: 1px solid #334155; border-radius: 12px; padding: 15px; outline: none; }
-        .btn-action { width: 100%; padding: 18px; background: var(--primary); border: none; border-radius: 15px; color: white; font-weight: bold; margin-top: 20px; cursor: pointer; }
-        
-        #dropNav { position: absolute; right: 5%; top: 65px; background: #1e293b; border: 1px solid var(--primary); display: none; flex-direction: column; z-index: 9999; border-radius: 10px; overflow: hidden; }
-        #dropNav button { background: none; border: none; color: white; padding: 12px 25px; text-align: left; cursor: pointer; }
+        /* --- DASHBOARD DLL TETEP SAMA --- */
+        #central-menu { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 9000; background: rgba(5, 7, 10, 0.95); }
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; width: 90%; max-width: 900px; }
+        .big-btn { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(0, 242, 255, 0.15); padding: 40px 20px; border-radius: 24px; color: #fff; text-align: center; }
+        nav { display: none; justify-content: space-between; align-items: center; padding: 15px 8%; background: rgba(13, 17, 23, 0.9); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 8000; border-bottom: 1px solid rgba(0, 242, 255, 0.2); }
+        .container { max-width: 800px; margin: 40px auto; padding: 0 20px; display: none; }
+        .enc-card { background: var(--card); border: 1px solid rgba(255, 255, 255, 0.05); padding: 35px; border-radius: 30px; }
+        textarea { width: 100%; background: #000; color: #00ff41; border: 1px solid #1a1f35; border-radius: 15px; padding: 20px; margin-bottom: 20px; }
+        .btn-action { width: 100%; padding: 20px; border-radius: 15px; border: none; background: linear-gradient(90deg, var(--primary), var(--secondary)); color: white; font-weight: bold; font-family: 'Orbitron'; letter-spacing: 2px; }
+        #dropNav { position: absolute; right: 8%; top: 75px; background: #0d1117; border: 1px solid var(--primary); border-radius: 15px; display: none; flex-direction: column; overflow: hidden; min-width: 200px; }
+        #dropNav button { padding: 15px 25px; color: white; border: none; text-align: left; background: none; cursor: pointer; }
     </style>
 </head>
-<body oncontextmenu="return false;">
-
+<body>
     <div id="opening-page">
         <canvas id="rainCanvas"></canvas>
         <div class="glass-card">
             <h1 class="glitch-text">GALANGHOST</h1>
-            <p id="motivation-text">"Loading inspiration..."</p>
-            
-            <div class="btn-group">
-                <button class="enter-btn" onclick="showCentral()">ENTER CONSOLE</button>
-                <a href="https://www.langzxy-store.my.id" target="_blank" class="store-btn">Visit Web Store 🛒</a>
-            </div>
+            <p style="color: #64748b; margin-bottom: 35px; font-size: 0.8rem; letter-spacing: 1px;">ENCRYPTION REVOLUTION V7.2</p>
+            <button class="enter-btn" onclick="showCentral()">ACCESS CONSOLE</button><br>
+            <a href="https://www.langzxy-store.my.id" target="_blank" style="color: var(--accent); font-size: 0.8rem; font-weight: bold; text-transform: uppercase; letter-spacing: 2px;">Visit Web Store 🛒</a>
         </div>
     </div>
 
     <div id="central-menu">
-        <h3 style="margin-bottom: 25px; letter-spacing: 2px;">CHOOSE TOOLS</h3>
-        <button class="big-btn" onclick="openApp('html-enc')">🌐 HTML ENCRYPTER</button>
-        <button class="big-btn" onclick="openApp('js-enc')">📜 JS ENCRYPTER</button>
-        <button class="big-btn" onclick="openApp('css-enc')">🎨 CSS OBFUSCATOR</button>
+        <h2 style="font-family: 'Orbitron'; margin-bottom: 40px; letter-spacing: 5px;">SELECT SYSTEM</h2>
+        <div class="menu-grid">
+            <div class="big-btn" onclick="openApp('html-enc')"><h3 style="font-family: 'Orbitron';">HTML ENGINE</h3></div>
+            <div class="big-btn" onclick="openApp('js-enc')"><h3 style="font-family: 'Orbitron';">JS ENGINE</h3></div>
+            <div class="big-btn" onclick="openApp('css-enc')"><h3 style="font-family: 'Orbitron';">CSS ENGINE</h3></div>
+        </div>
     </div>
 
     <nav id="top-nav">
-        <h2>Galang<span style="color: var(--primary);">Tamvanzz</span></h2>
-        <button onclick="toggleD()" style="background:var(--primary); border:none; padding:8px 15px; border-radius:8px; cursor:pointer; font-weight:bold;">MENU ☰</button>
+        <h2 style="font-family: 'Orbitron'; font-size: 1.2rem;">GALANG<span style="color: var(--primary);">HOST</span></h2>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="toggleD()" style="background:var(--primary); color:#000; border:none; padding:8px 15px; border-radius:8px; font-weight:bold;">MENU</button>
+            <button onclick="location.reload()" style="background:#ef4444; color:white; border:none; padding:8px 15px; border-radius:8px; font-weight:bold;">✖</button>
+        </div>
         <div id="dropNav">
-            <button onclick="switchApp('html-enc')">HTML Enc</button>
-            <button onclick="switchApp('js-enc')">JS Enc</button>
-            <button onclick="switchApp('css-enc')">CSS Obfuscator</button>
+            <button onclick="switchApp('html-enc')">HTML ENGINE</button>
+            <button onclick="switchApp('js-enc')">JS ENGINE</button>
+            <button onclick="switchApp('css-enc')">CSS ENGINE</button>
         </div>
     </nav>
 
     <div class="container" id="main-app">
-        <div id="html-enc" class="enc-card" style="display:none;">
-            <h3>🌐 HTML HARD ENC</h3>
-            <input type="file" id="fHtml" accept=".html,.txt" style="display:block; margin: 15px 0;">
-            <textarea id="tHtml" rows="8" placeholder="Paste kode HTML..."></textarea>
-            <select id="selHtml" style="width:100%; padding:12px; background:#0b0f1a; color:white; border-radius:10px; margin-top:15px; border:1px solid #334155;">
-                <option value="hex">Hexadecimal Style</option>
-                <option value="unicode">Unicode Style</option>
-            </select>
-            <button class="btn-action" onclick="doEnc('html')">ENCRYPT NOW</button>
-        </div>
-
-        <div id="js-enc" class="enc-card" style="display:none;">
-            <h3>📜 JS ENCRYPTER</h3>
-            <input type="file" id="fJs" accept=".js" style="display:block; margin: 15px 0;">
-            <textarea id="tJs" rows="8" placeholder="Paste kode JS..."></textarea>
-            <button class="btn-action" onclick="doEnc('js')">ENCRYPT NOW</button>
-        </div>
-
-        <div id="css-enc" class="enc-card" style="display:none;">
-            <h3>🎨 CSS OBFUSCATOR</h3>
-            <input type="file" id="fCss" accept=".css" style="display:block; margin: 15px 0;">
-            <textarea id="tCss" rows="8" placeholder="Paste kode CSS..."></textarea>
-            <button class="btn-action" onclick="doEnc('css')">ENCRYPT NOW</button>
+        <div class="enc-card">
+            <h3 id="tool-title" style="font-family: 'Orbitron'; margin-bottom: 25px; color: var(--primary);">ENGINE</h3>
+            <label style="display:block; padding:20px; border:1px dashed var(--primary); border-radius:15px; text-align:center; margin-bottom:20px; color:var(--primary); cursor:pointer;" for="file-input">📁 UPLOAD SOURCE FILE</label>
+            <input type="file" id="file-input" style="display:none;" onchange="handleFile(this)">
+            <textarea id="input-code" rows="12" placeholder="// Paste code here..."></textarea>
+            <button class="btn-action" onclick="processEnc()">⚡ START ENCRYPTION</button>
+            <div id="result-controls" style="display:none; margin-top:30px; border-top:1px solid #333; padding-top:20px;">
+                <div style="display:flex; gap:15px;">
+                    <button style="flex:1; padding:15px; background:rgba(255,255,255,0.05); color:white; border:1px solid var(--primary); border-radius:12px;" onclick="togglePreview()">👁️ PREVIEW</button>
+                    <button style="flex:1; padding:15px; background:var(--accent); color:white; border:none; border-radius:12px; font-weight:bold;" onclick="downloadResult()">📥 DOWNLOAD</button>
+                </div>
+                <textarea id="output-preview" rows="10" style="display:none; margin-top:20px; border-color:var(--accent);" readonly></textarea>
+            </div>
         </div>
     </div>
 
     <script>
-        // --- RAIN EFFECT ---
+        let currentType = 'html';
+        let originalFileName = "GalangHost_LangzEnc";
+        let encryptedResult = "";
+
+        function showCentral() { 
+            document.getElementById('opening-page').style.opacity = '0';
+            setTimeout(() => { document.getElementById('opening-page').style.display = 'none'; document.getElementById('central-menu').style.display = 'flex'; }, 600);
+        }
+        function openApp(id) {
+            currentType = id.split('-')[0];
+            document.getElementById('tool-title').innerText = id.toUpperCase().replace('-',' ');
+            document.getElementById('central-menu').style.display = 'none';
+            document.getElementById('top-nav').style.display = 'flex';
+            document.getElementById('main-app').style.display = 'block';
+            document.getElementById('result-controls').style.display = 'none';
+            document.getElementById('input-code').value = '';
+        }
+        function toggleD() { let d = document.getElementById('dropNav'); d.style.display = (d.style.display === 'flex') ? 'none' : 'flex'; }
+        function switchApp(id) { openApp(id); document.getElementById('dropNav').style.display = 'none'; }
+        function handleFile(input) {
+            const file = input.files[0]; if(!file) return;
+            originalFileName = file.name.split('.').slice(0,-1).join('.') + "_LangzEnc";
+            const reader = new FileReader();
+            reader.onload = (e) => { document.getElementById('input-code').value = e.target.result; };
+            reader.readAsText(file);
+        }
+        function processEnc() {
+            let code = document.getElementById('input-code').value; if(!code) return alert("Isi kode!");
+            if(currentType === 'html') {
+                encryptedResult = `\n<!DOCTYPE html><html><body oncontextmenu="return false"><script>document.write(decodeURIComponent(escape(atob('${btoa(unescape(encodeURIComponent(code)))}'))));<\/script></body></html>`;
+            } else if(currentType === 'js') {
+                let encoded = code.split('').map(c => c.charCodeAt(0)).join(',');
+                encryptedResult = `/* ENC BY GALANGHOST */\n(function(){eval(String.fromCharCode(${encoded}))})();`;
+            } else {
+                encryptedResult = `<style>/* OBF BY GALANGHOST */\n${code.replace(/\s+/g, ' ')}</style>`;
+            }
+            document.getElementById('output-preview').value = encryptedResult;
+            document.getElementById('result-controls').style.display = 'block';
+            alert("SUCCESS!");
+        }
+        function togglePreview() { let p = document.getElementById('output-preview'); p.style.display = (p.style.display === 'none') ? 'block' : 'none'; }
+        function downloadResult() {
+            const blob = new Blob([encryptedResult], {type:'text/plain'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `${originalFileName}.${currentType === 'js' ? 'js' : (currentType === 'css' ? 'css' : 'html')}`;
+            a.click();
+        }
         const canvas = document.getElementById('rainCanvas');
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-        let drops = [];
-        for (let i = 0; i < 100; i++) { drops.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, len: Math.random() * 20 + 10, speed: Math.random() * 10 + 5 }); }
-        function drawRain() { ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.strokeStyle = '#00d2ff'; ctx.lineWidth = 1; for (let i = 0; i < drops.length; i++) { let p = drops[i]; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x, p.y + p.len); ctx.stroke(); p.y += p.speed; if (p.y > canvas.height) { p.y = -20; p.x = Math.random() * canvas.width; } } requestAnimationFrame(drawRain); }
+        function drawRain() { ctx.fillStyle='rgba(0,0,0,0.1)'; ctx.fillRect(0,0,canvas.width,canvas.height); ctx.fillStyle='#00f2ff'; for(let i=0;i<10;i++) ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, 1, 15); requestAnimationFrame(drawRain); }
         drawRain();
-
-        // --- MOTIVATION ---
-        const quotes = [
-            "GalangHost: Protect your code, grow your dreams.",
-            "Coding adalah seni mengubah logika menjadi keajaiban.",
-            "Hargai proses, hasil takkan lari kemana.",
-            "Setiap error adalah pelajaran menuju kesempurnaan."
-        ];
-        document.getElementById('motivation-text').innerText = quotes[Math.floor(Math.random() * quotes.length)];
-
-        // --- NAVIGATION LOGIC ---
-        function showCentral() { document.getElementById('opening-page').style.opacity = '0'; setTimeout(() => { document.getElementById('opening-page').style.display = 'none'; document.getElementById('central-menu').style.display = 'flex'; }, 600); }
-        function openApp(id) { document.getElementById('central-menu').style.display = 'none'; document.getElementById('top-nav').style.display = 'flex'; document.getElementById('main-app').style.display = 'block'; switchApp(id); }
-        function switchApp(id) { document.getElementById('html-enc').style.display = 'none'; document.getElementById('js-enc').style.display = 'none'; document.getElementById('css-enc').style.display = 'none'; document.getElementById(id).style.display = 'block'; document.getElementById('dropNav').style.display = 'none'; }
-        function toggleD() { let d = document.getElementById('dropNav'); d.style.display = (d.style.display === 'flex') ? 'none' : 'flex'; }
-
-        // --- SECURE BACKEND BRIDGE ---
-        async function doEnc(type) {
-            let code = "";
-            let fileIn = document.getElementById(type === 'html' ? 'fHtml' : (type === 'js' ? 'fJs' : 'fCss'));
-            let textIn = document.getElementById(type === 'html' ? 'tHtml' : (type === 'js' ? 'tJs' : 'tCss'));
-
-            if (fileIn.files.length > 0) { 
-                code = await fileIn.files[0].text(); 
-            } else { 
-                code = textIn.value; 
-            }
-
-            if (!code) return alert("Pilih file atau masukkan teks dulu!");
-
-            try {
-                let styleVal = document.getElementById('selHtml') ? document.getElementById('selHtml').value : 'hex';
-
-                // Nembak ke api/encrypt.js di folder api/
-                const response = await fetch('/api/encrypt', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code, type, style: styleVal })
-                });
-
-                const data = await response.json();
-                
-                if (data.success) {
-                    const blob = new Blob([data.result], { type: 'text/plain' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `GalangEnc_${Date.now()}.${type === 'html' ? 'html' : type}`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    alert("Enkripsi Berhasil via Server Aman!");
-                } else {
-                    alert("Gagal Enkripsi: " + (data.message || "Kesalahan server"));
-                }
-            } catch (err) {
-                alert("Gagal konek ke server backend! Pastikan folder api/ sudah berisi encrypt.js.");
-            }
-        }
     </script>
 </body>
 </html>
